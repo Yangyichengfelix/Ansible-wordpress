@@ -1,0 +1,29 @@
+---
+
+# - name: deployment mariadb
+#   hosts: mariadb 
+
+#   tasks:
+    - name: Install MariaDB #installer mariadb
+      apt: name=mariadb-server state=present
+    - name: Start MariaDB #auto start mariadb
+      service: name=mariadb state=started enabled=yes
+
+    - name: create database wordpress
+      shell: mysql -e "drop database if exists wordpress; create database wordpress;"
+    - name: cretae wordpress user
+      # shell: mysql -e "grant all privileges on wordpress.* to 'wordpress'@'localhost' identified by '123456'; flush privileges;"
+      shell: mysql -e "grant all privileges on wordpress.* to 'wordpress'@'%' identified by '{{wordpress_pwd}}'; flush privileges;"
+ 
+    - name: bind address
+      shell: echo {{bind_address}} >> /etc/mysql/mariadb.cnf
+
+    - name: restart mariadb
+      shell: systemctl restart mysql
+
+  # Handlers: la liste des handlers à utilisé en réaction à un notify_key
+
+  # Roles: les roles à importer dans le play
+
+# Three dots indicate the end of a YAML document
+...

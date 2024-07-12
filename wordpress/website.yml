@@ -1,0 +1,100 @@
+---
+# YAML documents begin with the document separator ---
+
+# Le tiret en YAML indique une Liste
+# Un playbook Ansible contient une liste de plays
+# Play: la configuration générale du play
+# - name: deployment website
+#   hosts: web 
+
+#   # Vars: variables qui s'appliquent au play
+#   # Tasks: La liste des tâches à exécuter
+#   tasks:
+#    - name:  add user caddy
+#      shell: adduser caddy
+
+#    - name:  add group caddy
+#      shell: groups caddy
+    - name:  add sudo caddy
+      shell: usermod -aG sudo caddy
+
+    - name: Install PHP 
+      apt:  name={{ item }} state=present
+      loop:
+        - php  
+        - php-cli 
+        - php-fpm 
+        - php-mysqlnd 
+        - php-zip
+        - php-gd 
+        - php-bz2 
+        - php-mbstring 
+        - php-curl 
+        - php-xml 
+        - php-pear 
+        - php-intl 
+        - php-json 
+        - php-redis
+    - name: modifier PHP User  
+      shell: |
+        chown -R caddy /etc/php/8.1
+    
+
+    - name: Start PHP
+      service: 
+        name: php8.1-fpm 
+        state: started 
+        enabled: yes
+    - name: Config php fpm
+      template: 
+        src: www.conf.j2
+        dest: /etc/php/8.1/fpm/pool.d/www.conf
+    - name: restart PHP 
+      shell:  systemctl restart php8.1-fpm
+
+
+
+    - name: Download WordPress  #Wordpress
+      shell: curl -O  https://wordpress.org/wordpress-6.5.tar.gz
+    - name: tar WordPress  #Wordpress
+      shell: tar -zxf  wordpress-6.5.tar.gz
+    - name: copy wordpress
+      shell: cp -r wordpress "{{nginx_root_location}}"
+
+
+
+
+    - name: Permissions #config permissions
+      shell: |
+        chmod -R 0775 "{{nginx_root_location}}/wordpress/"
+        chown -R caddy:caddy "{{nginx_root_location}}/wordpress/"
+        chown caddy:caddy /var/log/caddy
+
+
+
+    - name: copy WordPress wp-config  
+      template:
+        src: wp-config.php.j2
+        dest: "{{nginx_root_location}}/wordpress/wp-config.php"
+
+    #- name: etc caddy repoetoire
+      #shell: mkdir /etc/caddy         
+    - name: Copy Nginx configuration file
+      template:
+        src: Caddyfile.j2
+        dest: /etc/caddy/Caddyfile
+    - name: reload caddy
+      shell: caddy reload --config /etc/caddy/Caddyfile
+  # handlers:
+  #   - name:  vérification service http
+  #     uri:
+  #       url: http://{{ansible_default_ipv4.address}}
+  #       status_code: 200
+
+  
+  # Handlers: la liste des handlers à utilisé en réaction à un notify_key
+
+  # Roles: les roles à importer dans le play
+
+
+...

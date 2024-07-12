@@ -1,0 +1,42 @@
+{  
+    log default {  
+       format console  
+       output file /var/log/caddy/system.log  
+       exclude http.log.access  
+    }
+}
+
+# import config/*  
+# import sites/*
+:80 {
+        # Set this path to your site's directory.
+#       root * /usr/share/caddy
+
+        # Enable the static file server.
+#       file_server
+
+        log {
+            output file /var/log/caddy/wordpress.log
+        }
+        root * /var/www/html/wordpress
+        php_fastcgi unix//run/php/php8.1-fpm.sock
+        file_server
+        encode zstd gzip
+        @disallowed {
+                path /xmlrpc.php
+                path /wp-config.php
+                path /readme.html
+                path /*.txt
+                path /*.sql
+                path /.user.ini
+                path /wp-content/uploads/*.php
+                path /wp-content/uploads/*.log
+        }
+        rewrite @disallowed /index.php
+
+        # Another common task is to set up a reverse proxy:
+        # reverse_proxy localhost:8080
+
+        # Or serve a PHP site through php-fpm:
+        # php_fastcgi localhost:9000
+}

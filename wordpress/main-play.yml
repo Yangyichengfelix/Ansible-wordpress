@@ -1,0 +1,16 @@
+---
+- name: deployment wordpress with ansible
+  hosts: mariadb 
+
+  tasks:
+    - name: install mariadb
+      include: db.yml
+- name: deployment wordpress with ansible
+  hosts: web 
+
+  tasks: 
+    - name: install caddy server    
+      include: caddy.yml
+    - name: install php wordpress
+      include: website.yml
+...
